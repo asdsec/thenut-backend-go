@@ -27,9 +27,12 @@ OFFSET $3;
 
 -- name: UpdateMerchant :one
 UPDATE merchants
-SET balance = COALESCE($2, balance), profession = COALESCE($3, profession),
-title = COALESCE($4, title), about = COALESCE($5, about),
-image_url = COALESCE($6, image_url), rating = COALESCE($7, rating)
+SET balance = COALESCE($2, balance), 
+    profession = COALESCE($3, profession),
+    title = COALESCE($4, title),
+    about = COALESCE($5, about),
+    image_url = COALESCE($6, image_url),
+    rating = COALESCE($7, rating)
 WHERE id = $1
 RETURNING *;
 

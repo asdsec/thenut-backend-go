@@ -76,3 +76,8 @@ func RandomGender() string {
 func RandomBirthDate() time.Time {
 	return time.Now()
 }
+
+// RandomMoney generates a random amount of money
+func RandomMoney() int64 {
+	return RandomInt(0, 1000)
+}
