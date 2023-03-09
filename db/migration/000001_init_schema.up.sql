@@ -56,7 +56,7 @@ CREATE TABLE "payments" (
 );
 
 -- CREATE UNIQUE INDEX ON "customers" ("owner");
-ALTER TABLE "customers" ADD CONSTRAINT "customer_key" UNIQUE ("owner");
+ALTER TABLE "customers" ADD CONSTRAINT "owner_key" UNIQUE ("owner");
 
 CREATE INDEX ON "merchants" ("owner");
 
