@@ -13,11 +13,6 @@ INSERT INTO merchants (
 SELECT * FROM merchants
 WHERE id = $1 LIMIT 1;
 
--- name: GetMerchantForUpdate :one
-SELECT * FROM merchants
-WHERE id = $1 LIMIT 1
-FOR NO KEY UPDATE;
-
 -- name: ListMerchants :many
 SELECT * FROM merchants
 WHERE owner = $1
@@ -27,13 +22,13 @@ OFFSET $3;
 
 -- name: UpdateMerchant :one
 UPDATE merchants
-SET balance = COALESCE($2, balance), 
-    profession = COALESCE($3, profession),
-    title = COALESCE($4, title),
-    about = COALESCE($5, about),
-    image_url = COALESCE($6, image_url),
-    rating = COALESCE($7, rating)
-WHERE id = $1
+SET balance = COALESCE(sqlc.narg(balance), balance),
+    profession = COALESCE(sqlc.narg(profession), profession),
+    title = COALESCE(sqlc.narg(title), title),
+    about = COALESCE(sqlc.narg(about), about),
+    image_url = COALESCE(sqlc.narg(image_url), image_url),
+    rating = COALESCE(sqlc.narg(rating), rating)
+WHERE id = sqlc.arg(id)
 RETURNING *;
 
 -- name: AddMerchantBalance :one

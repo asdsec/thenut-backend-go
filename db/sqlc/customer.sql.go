@@ -58,7 +58,7 @@ func (q *Queries) GetCustomer(ctx context.Context, id int64) (Customer, error) {
 
 const updateCustomer = `-- name: UpdateCustomer :one
 UPDATE customers
-SET image_url = COALESCE($2, image_url)
+SET image_url = $2
 WHERE id = $1
 RETURNING id, owner, image_url, created_at
 `

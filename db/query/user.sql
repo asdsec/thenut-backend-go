@@ -17,9 +17,12 @@ WHERE username = $1 LIMIT 1;
 
 -- name: UpdateUser :one
 UPDATE users
-SET full_name = COALESCE($2, full_name), phone_number = COALESCE($3, phone_number),
-gender = COALESCE($4, gender), birth_date = COALESCE($5, birth_date)
-WHERE username = $1
+SET full_name = COALESCE(sqlc.narg(full_name), full_name),
+    phone_number = COALESCE(sqlc.narg(phone_number), phone_number),
+    gender = COALESCE(sqlc.narg(gender), gender), 
+    birth_date = COALESCE(sqlc.narg(birth_date), birth_date),
+    image_url = COALESCE(sqlc.narg(image_url), image_url)
+WHERE username = sqlc.arg(username)
 RETURNING *;
 
 -- name: UpdatePassword :one

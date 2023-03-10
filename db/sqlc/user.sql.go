@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -159,27 +160,32 @@ func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) 
 
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
-SET full_name = COALESCE($2, full_name), phone_number = COALESCE($3, phone_number),
-gender = COALESCE($4, gender), birth_date = COALESCE($5, birth_date)
-WHERE username = $1
+SET full_name = COALESCE($1, full_name),
+    phone_number = COALESCE($2, phone_number),
+    gender = COALESCE($3, gender), 
+    birth_date = COALESCE($4, birth_date),
+    image_url = COALESCE($5, image_url)
+WHERE username = $6
 RETURNING username, hashed_password, full_name, email, phone_number, image_url, gender, disabled, birth_date, password_changed_at, created_at
 `
 
 type UpdateUserParams struct {
-	Username    string    `json:"username"`
-	FullName    string    `json:"full_name"`
-	PhoneNumber string    `json:"phone_number"`
-	Gender      string    `json:"gender"`
-	BirthDate   time.Time `json:"birth_date"`
+	FullName    sql.NullString `json:"full_name"`
+	PhoneNumber sql.NullString `json:"phone_number"`
+	Gender      sql.NullString `json:"gender"`
+	BirthDate   sql.NullTime   `json:"birth_date"`
+	ImageUrl    sql.NullString `json:"image_url"`
+	Username    string         `json:"username"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
 	row := q.db.QueryRowContext(ctx, updateUser,
-		arg.Username,
 		arg.FullName,
 		arg.PhoneNumber,
 		arg.Gender,
 		arg.BirthDate,
+		arg.ImageUrl,
+		arg.Username,
 	)
 	var i User
 	err := row.Scan(

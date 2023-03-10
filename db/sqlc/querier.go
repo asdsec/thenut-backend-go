@@ -23,7 +23,6 @@ type Querier interface {
 	GetCustomer(ctx context.Context, id int64) (Customer, error)
 	GetEntry(ctx context.Context, id int64) (Entry, error)
 	GetMerchant(ctx context.Context, id int64) (Merchant, error)
-	GetMerchantForUpdate(ctx context.Context, id int64) (Merchant, error)
 	GetPayment(ctx context.Context, id int64) (Payment, error)
 	GetUser(ctx context.Context, username string) (User, error)
 	ListConsultancies(ctx context.Context, arg ListConsultanciesParams) ([]Consultancy, error)

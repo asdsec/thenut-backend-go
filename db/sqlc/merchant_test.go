@@ -114,24 +114,6 @@ func TestGetMerchant(t *testing.T) {
 	require.Equal(t, tMerchant.Title, merchant.Title)
 }
 
-func TestGetMerchantForUpdate(t *testing.T) {
-	tMerchant := createRandomMerchant(t)
-
-	merchant, err := testQueries.GetMerchantForUpdate(context.Background(), tMerchant.ID)
-
-	require.NoError(t, err)
-	require.NotEmpty(t, merchant)
-	require.Equal(t, tMerchant.About, merchant.About)
-	require.Equal(t, tMerchant.Balance, merchant.Balance)
-	require.WithinDuration(t, tMerchant.CreatedAt, merchant.CreatedAt, time.Second)
-	require.Equal(t, tMerchant.ID, merchant.ID)
-	require.Equal(t, tMerchant.ImageUrl, merchant.ImageUrl)
-	require.Equal(t, tMerchant.Owner, merchant.Owner)
-	require.Equal(t, tMerchant.Profession, merchant.Profession)
-	require.Equal(t, tMerchant.Rating, merchant.Rating)
-	require.Equal(t, tMerchant.Title, merchant.Title)
-}
-
 func TestListMerchants(t *testing.T) {
 	var tLastMerchant Merchant
 	for i := 0; i < 10; i++ {
@@ -154,49 +136,86 @@ func TestListMerchants(t *testing.T) {
 }
 
 func TestUpdateMerchant(t *testing.T) {
-	tMerchant := createRandomMerchant(t)
-	arg := UpdateMerchantParams{
-		ID:         tMerchant.ID,
-		Balance:    utils.RandomMoney(),
-		Profession: utils.RandomString(6),
-		Title:      utils.RandomString(6),
-		About:      utils.RandomString(12),
-		ImageUrl:   utils.RandomImageUrl(),
-		Rating:     int32(utils.RandomInt(0, 10)),
+	testCases := []struct {
+		name          string
+		arg           UpdateMerchantParams
+		checkResponse func(t *testing.T, arg UpdateMerchantParams, tMerchant Merchant, merchant Merchant, err error)
+	}{
+		{
+			name: "All Fields Update",
+			arg: UpdateMerchantParams{
+				Balance: sql.NullInt64{
+					Int64: utils.RandomMoney(),
+					Valid: true,
+				},
+				Profession: sql.NullString{
+					String: utils.RandomString(6),
+					Valid:  true,
+				},
+				Title: sql.NullString{
+					String: utils.RandomString(6),
+					Valid:  true,
+				},
+				About: sql.NullString{
+					String: utils.RandomString(12),
+					Valid:  true,
+				},
+				ImageUrl: sql.NullString{
+					String: utils.RandomImageUrl(),
+					Valid:  true,
+				},
+				Rating: sql.NullInt32{
+					Int32: int32(utils.RandomInt(0, 10)),
+					Valid: true,
+				},
+			},
+			checkResponse: func(t *testing.T, arg UpdateMerchantParams, tMerchant Merchant, merchant Merchant, err error) {
+				require.NoError(t, err)
+				require.NotEmpty(t, merchant)
+				require.Equal(t, arg.About.String, merchant.About)
+				require.Equal(t, arg.Balance.Int64, merchant.Balance)
+				require.Equal(t, arg.ID, merchant.ID)
+				require.Equal(t, arg.ImageUrl.String, merchant.ImageUrl)
+				require.Equal(t, arg.Profession.String, merchant.Profession)
+				require.Equal(t, arg.Rating.Int32, merchant.Rating)
+				require.Equal(t, arg.Title.String, merchant.Title)
+				require.WithinDuration(t, tMerchant.CreatedAt, merchant.CreatedAt, time.Second)
+				require.Equal(t, tMerchant.Owner, merchant.Owner)
+			},
+		},
+		{
+			name: "Only About Update",
+			arg: UpdateMerchantParams{
+				About: sql.NullString{
+					String: utils.RandomString(12),
+					Valid:  true,
+				},
+			},
+			checkResponse: func(t *testing.T, arg UpdateMerchantParams, tMerchant Merchant, merchant Merchant, err error) {
+				require.NoError(t, err)
+				require.NotEmpty(t, merchant)
+				require.Equal(t, arg.ID, merchant.ID)
+				require.Equal(t, arg.About.String, merchant.About)
+				require.Equal(t, tMerchant.Balance, merchant.Balance)
+				require.Equal(t, tMerchant.ImageUrl, merchant.ImageUrl)
+				require.Equal(t, tMerchant.Profession, merchant.Profession)
+				require.Equal(t, tMerchant.Rating, merchant.Rating)
+				require.Equal(t, tMerchant.Title, merchant.Title)
+				require.WithinDuration(t, tMerchant.CreatedAt, merchant.CreatedAt, time.Second)
+				require.Equal(t, tMerchant.Owner, merchant.Owner)
+			},
+		},
 	}
 
-	merchant, err := testQueries.UpdateMerchant(context.Background(), arg)
+	for i := range testCases {
+		tc := testCases[i]
 
-	require.NoError(t, err)
-	require.NotEmpty(t, merchant)
-	require.Equal(t, arg.About, merchant.About)
-	require.Equal(t, arg.Balance, merchant.Balance)
-	require.Equal(t, arg.ID, merchant.ID)
-	require.Equal(t, arg.ImageUrl, merchant.ImageUrl)
-	require.Equal(t, arg.Profession, merchant.Profession)
-	require.Equal(t, arg.Rating, merchant.Rating)
-	require.Equal(t, arg.Title, merchant.Title)
-	require.WithinDuration(t, tMerchant.CreatedAt, merchant.CreatedAt, time.Second)
-	require.Equal(t, tMerchant.Owner, merchant.Owner)
+		t.Run(tc.name, func(t *testing.T) {
+			tMerchant := createRandomMerchant(t)
+			tc.arg.ID = tMerchant.ID
+			merchant, err := testQueries.UpdateMerchant(context.Background(), tc.arg)
+			tc.checkResponse(t, tc.arg, tMerchant, merchant, err)
+		})
+	}
+
 }
-
-// func TestUpdateMerchantWithOnlyAbout(t *testing.T) {
-// 	tMerchant := createRandomMerchant(t)
-// 	arg := UpdateMerchantParams{
-// 		ID: tMerchant.ID,
-// 	}
-
-// 	merchant, err := testQueries.UpdateMerchant(context.Background(), arg)
-
-// 	require.NoError(t, err)
-// 	require.NotEmpty(t, merchant)
-// 	require.Equal(t, arg.About, merchant.About)
-// 	require.Equal(t, arg.ID, merchant.ID)
-// 	require.Equal(t, tMerchant.Balance, merchant.Balance)
-// 	require.Equal(t, tMerchant.ImageUrl, merchant.ImageUrl)
-// 	require.Equal(t, tMerchant.Profession, merchant.Profession)
-// 	require.Equal(t, tMerchant.Rating, merchant.Rating)
-// 	require.Equal(t, tMerchant.Title, merchant.Title)
-// 	require.WithinDuration(t, tMerchant.CreatedAt, merchant.CreatedAt, time.Second)
-// 	require.Equal(t, tMerchant.Owner, merchant.Owner)
-// }

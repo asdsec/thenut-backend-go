@@ -11,7 +11,7 @@ WHERE id = $1 LIMIT 1;
 
 -- name: UpdateCustomer :one
 UPDATE customers
-SET image_url = COALESCE($2, image_url)
+SET image_url = $2
 WHERE id = $1
 RETURNING *;
 

@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 const addMerchantBalance = `-- name: AddMerchantBalance :one
@@ -113,29 +114,6 @@ func (q *Queries) GetMerchant(ctx context.Context, id int64) (Merchant, error) {
 	return i, err
 }
 
-const getMerchantForUpdate = `-- name: GetMerchantForUpdate :one
-SELECT id, owner, balance, profession, title, about, image_url, rating, created_at FROM merchants
-WHERE id = $1 LIMIT 1
-FOR NO KEY UPDATE
-`
-
-func (q *Queries) GetMerchantForUpdate(ctx context.Context, id int64) (Merchant, error) {
-	row := q.db.QueryRowContext(ctx, getMerchantForUpdate, id)
-	var i Merchant
-	err := row.Scan(
-		&i.ID,
-		&i.Owner,
-		&i.Balance,
-		&i.Profession,
-		&i.Title,
-		&i.About,
-		&i.ImageUrl,
-		&i.Rating,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
 const listMerchants = `-- name: ListMerchants :many
 SELECT id, owner, balance, profession, title, about, image_url, rating, created_at FROM merchants
 WHERE owner = $1
@@ -185,35 +163,35 @@ func (q *Queries) ListMerchants(ctx context.Context, arg ListMerchantsParams) ([
 
 const updateMerchant = `-- name: UpdateMerchant :one
 UPDATE merchants
-SET balance = COALESCE($2, balance), 
-    profession = COALESCE($3, profession),
-    title = COALESCE($4, title),
-    about = COALESCE($5, about),
-    image_url = COALESCE($6, image_url),
-    rating = COALESCE($7, rating)
-WHERE id = $1
+SET balance = COALESCE($1, balance),
+    profession = COALESCE($2, profession),
+    title = COALESCE($3, title),
+    about = COALESCE($4, about),
+    image_url = COALESCE($5, image_url),
+    rating = COALESCE($6, rating)
+WHERE id = $7
 RETURNING id, owner, balance, profession, title, about, image_url, rating, created_at
 `
 
 type UpdateMerchantParams struct {
-	ID         int64  `json:"id"`
-	Balance    int64  `json:"balance"`
-	Profession string `json:"profession"`
-	Title      string `json:"title"`
-	About      string `json:"about"`
-	ImageUrl   string `json:"image_url"`
-	Rating     int32  `json:"rating"`
+	Balance    sql.NullInt64  `json:"balance"`
+	Profession sql.NullString `json:"profession"`
+	Title      sql.NullString `json:"title"`
+	About      sql.NullString `json:"about"`
+	ImageUrl   sql.NullString `json:"image_url"`
+	Rating     sql.NullInt32  `json:"rating"`
+	ID         int64          `json:"id"`
 }
 
 func (q *Queries) UpdateMerchant(ctx context.Context, arg UpdateMerchantParams) (Merchant, error) {
 	row := q.db.QueryRowContext(ctx, updateMerchant,
-		arg.ID,
 		arg.Balance,
 		arg.Profession,
 		arg.Title,
 		arg.About,
 		arg.ImageUrl,
 		arg.Rating,
+		arg.ID,
 	)
 	var i Merchant
 	err := row.Scan(
