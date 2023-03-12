@@ -8,6 +8,10 @@
 
 1.  Implements the files. You might use db diagram.io
 
+1.  To mock something:
+
+        mockgen -destination db/mock/store.go github.com/sametdmr/simplebank/db/sqlc Store
+
 ## Notes
 
 How to implement query in sqlc for partial update:

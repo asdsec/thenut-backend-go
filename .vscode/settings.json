@@ -1,3 +1,10 @@
 {
-	"cSpell.words": ["mapstructure", "sqlc", "stretchr", "thenut"]
+	"cSpell.words": [
+		"gomock",
+		"mapstructure",
+		"mockdb",
+		"sqlc",
+		"stretchr",
+		"thenut"
+	]
 }
