@@ -1,8 +1,11 @@
 {
 	"cSpell.words": [
+		"alphanum",
 		"gomock",
+		"gonic",
 		"mapstructure",
 		"mockdb",
+		"Paseto",
 		"sqlc",
 		"stretchr",
 		"thenut"

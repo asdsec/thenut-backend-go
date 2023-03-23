@@ -69,7 +69,7 @@ func RandomGender() string {
 
 	sb.WriteByte(genders[rand.Intn(2)])
 
-	return sb.String()
+	return "m"
 }
 
 // RandomBirthDate generates a random birth date

@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/asdsec/thenut/utils"
 	_ "github.com/lib/pq"
-	"github.com/sametdmr/thenut/utils"
 )
 
 var testQueries *Queries

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sametdmr/thenut/utils"
+	"github.com/asdsec/thenut/utils"
 	"github.com/stretchr/testify/require"
 )
 

@@ -10,7 +10,7 @@
 
 1.  To mock something:
 
-        mockgen -destination db/mock/store.go github.com/sametdmr/simplebank/db/sqlc Store
+        mockgen -destination db/mock/store.go github.com/asdsec/thenut/db/sqlc Store
 
 ## Notes
 
