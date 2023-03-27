@@ -27,7 +27,7 @@ RETURNING *;
 
 -- name: UpdatePassword :one
 UPDATE users
-SET hashed_password = $2
+SET hashed_password = $2, password_changed_at = $3
 WHERE username = $1
 RETURNING *;
 

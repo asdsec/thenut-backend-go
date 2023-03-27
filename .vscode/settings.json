@@ -3,6 +3,7 @@
 		"alphanum",
 		"gomock",
 		"gonic",
+		"invld",
 		"mapstructure",
 		"mockdb",
 		"Paseto",

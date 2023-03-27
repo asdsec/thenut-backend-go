@@ -53,7 +53,11 @@ func (server *Server) setupRouter() {
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
 	authRoutes.GET("/users/:username", server.getUser)
-	authRoutes.POST("/users", server.updateEmail)
+	// todo: add more auth method for updating email, like email verification
+	authRoutes.POST("/users/email", server.updateEmail)
+	// todo: add more auth method for updating password, like email verification
+	authRoutes.POST("/users/password", server.updatePassword)
+	authRoutes.PATCH("/users", server.updateUser)
 
 	server.router = router
 }

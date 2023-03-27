@@ -203,7 +203,6 @@ type updateEmailRequest struct {
 }
 
 func (server *Server) updateEmail(ctx *gin.Context) {
-
 	var req updateEmailRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -223,6 +222,129 @@ func (server *Server) updateEmail(ctx *gin.Context) {
 	}
 
 	user, err := server.store.UpdateEmail(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, newUserResponse(user))
+}
+
+type updatePasswordRequest struct {
+	Username    string `json:"username" binding:"required,min=6"`
+	OldPassword string `json:"old_password" binding:"required,min=6"`
+	NewPassword string `json:"new_password" binding:"required,min=6"`
+}
+
+func (server *Server) updatePassword(ctx *gin.Context) {
+	var req updatePasswordRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.TokenPayload)
+	if req.Username != authPayload.Username {
+		err := errors.New("username does not belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	user, err := server.store.GetUser(ctx, req.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	err = utils.CheckPassword(req.OldPassword, user.HashedPassword)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	hashedPassword, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	arg := db.UpdatePasswordParams{
+		Username:          req.Username,
+		HashedPassword:    hashedPassword,
+		PasswordChangedAt: time.Now(),
+	}
+
+	user, err = server.store.UpdatePassword(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, nil)
+}
+
+type updateUserRequest struct {
+	FullName    string    `json:"full_name"`
+	PhoneNumber string    `json:"phone_number"`
+	Gender      string    `json:"gender"`
+	BirthDate   time.Time `json:"birth_date"`
+	ImageUrl    string    `json:"image_url"`
+	Username    string    `json:"username" binding:"required"`
+}
+
+func (server *Server) updateUser(ctx *gin.Context) {
+	var req updateUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.TokenPayload)
+	if req.Username != authPayload.Username {
+		err := errors.New("username does not belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	arg := db.UpdateUserParams{
+		Username: req.Username,
+		FullName: sql.NullString{
+			String: req.FullName,
+			Valid:  len(req.FullName) > 0,
+		},
+		PhoneNumber: sql.NullString{
+			String: req.PhoneNumber,
+			Valid:  len(req.PhoneNumber) > 0,
+		},
+		Gender: sql.NullString{
+			String: req.Gender,
+			Valid:  len(req.Gender) > 0,
+		},
+		ImageUrl: sql.NullString{
+			String: req.ImageUrl,
+			Valid:  len(req.ImageUrl) > 0,
+		},
+		BirthDate: sql.NullTime{
+			Time:  req.BirthDate,
+			Valid: !req.BirthDate.IsZero(),
+		},
+	}
+
+	user, err := server.store.UpdateUser(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
