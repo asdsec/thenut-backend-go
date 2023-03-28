@@ -14,11 +14,12 @@ import (
 	db "github.com/asdsec/thenut/db/sqlc"
 	"github.com/asdsec/thenut/token"
 	"github.com/asdsec/thenut/utils"
+	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetUser(t *testing.T) {
+func TestGetUserAPI(t *testing.T) {
 	tUser, _ := randomUser(t)
 
 	testCases := []struct {
@@ -138,6 +139,174 @@ func TestGetUser(t *testing.T) {
 
 			url := "/users/" + tc.uri
 			request, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, server.tokenMaker)
+			server.router.ServeHTTP(recorder, request)
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
+func TestUpdateEmailAPI(t *testing.T) {
+	tUser, _ := randomUser(t)
+
+	testCases := []struct {
+		name          string
+		body          gin.H
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker)
+		buildStubs    func(store *mock_db.MockStore)
+		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "Ok",
+			body: gin.H{
+				"username": tUser.Username,
+				"email":    tUser.Email,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, tUser.Username, time.Minute)
+			},
+			buildStubs: func(store *mock_db.MockStore) {
+				arg := db.UpdateEmailParams{
+					Username: tUser.Username,
+					Email:    tUser.Email,
+				}
+
+				store.EXPECT().
+					UpdateEmail(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(tUser, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				requireBodyMatchUser(t, recorder.Body, tUser)
+			},
+		},
+		{
+			name: "InvalidUsername",
+			body: gin.H{
+				"username": "invld", // invalid username
+				"email":    tUser.Email,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, tUser.Username, time.Minute)
+			},
+			buildStubs: func(store *mock_db.MockStore) {
+				store.EXPECT().
+					UpdateEmail(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "NotFound",
+			body: gin.H{
+				"username": tUser.Username,
+				"email":    tUser.Email,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, tUser.Username, time.Minute)
+			},
+			buildStubs: func(store *mock_db.MockStore) {
+				arg := db.UpdateEmailParams{
+					Username: tUser.Username,
+					Email:    tUser.Email,
+				}
+
+				store.EXPECT().
+					UpdateEmail(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(db.User{}, sql.ErrNoRows)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
+		{
+			name: "InternalError",
+			body: gin.H{
+				"username": tUser.Username,
+				"email":    tUser.Email,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, tUser.Username, time.Minute)
+			},
+			buildStubs: func(store *mock_db.MockStore) {
+				arg := db.UpdateEmailParams{
+					Username: tUser.Username,
+					Email:    tUser.Email,
+				}
+
+				store.EXPECT().
+					UpdateEmail(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(db.User{}, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+		{
+			name: "UnauthenticatedUser",
+			body: gin.H{
+				"username": tUser.Username,
+				"email":    tUser.Email,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, "invalid_username", time.Minute)
+			},
+			buildStubs: func(store *mock_db.MockStore) {
+				store.EXPECT().
+					UpdateEmail(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name: "NoAuthentication",
+			body: gin.H{
+				"username": tUser.Username,
+				"email":    tUser.Email,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker) {
+				// no authentication
+			},
+			buildStubs: func(store *mock_db.MockStore) {
+				store.EXPECT().
+					UpdateEmail(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mock_db.NewMockStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			recorder := httptest.NewRecorder()
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+			require.NotEmpty(t, data)
+
+			url := "/users/email"
+			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)

@@ -101,18 +101,12 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := server.store.GetUser(ctx, req.Username)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	user, ok := getUserFromStore(ctx, server, req.Username)
+	if !ok {
 		return
 	}
 
-	err = utils.CheckPassword(req.Password, user.HashedPassword)
+	err := utils.CheckPassword(req.Password, user.HashedPassword)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
@@ -177,13 +171,8 @@ func (server *Server) getUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := server.store.GetUser(ctx, req.Username)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	user, ok := getUserFromStore(ctx, server, req.Username)
+	if !ok {
 		return
 	}
 
@@ -255,17 +244,12 @@ func (server *Server) updatePassword(ctx *gin.Context) {
 		return
 	}
 
-	user, err := server.store.GetUser(ctx, req.Username)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	user, ok := getUserFromStore(ctx, server, req.Username)
+	if !ok {
 		return
 	}
 
-	err = utils.CheckPassword(req.OldPassword, user.HashedPassword)
+	err := utils.CheckPassword(req.OldPassword, user.HashedPassword)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
@@ -356,4 +340,18 @@ func (server *Server) updateUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, newUserResponse(user))
+}
+
+func getUserFromStore(ctx *gin.Context, server *Server, username string) (db.User, bool) {
+	user, err := server.store.GetUser(ctx, username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return user, false
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return user, false
+	}
+	return user, true
 }
