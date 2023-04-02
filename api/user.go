@@ -278,7 +278,7 @@ func (server *Server) updatePassword(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, nil)
+	ctx.JSON(http.StatusOK, newUserResponse(user))
 }
 
 type updateUserRequest struct {
@@ -287,7 +287,7 @@ type updateUserRequest struct {
 	Gender      string    `json:"gender"`
 	BirthDate   time.Time `json:"birth_date"`
 	ImageUrl    string    `json:"image_url"`
-	Username    string    `json:"username" binding:"required"`
+	Username    string    `json:"username" binding:"required,min=6"`
 }
 
 func (server *Server) updateUser(ctx *gin.Context) {
@@ -324,7 +324,7 @@ func (server *Server) updateUser(ctx *gin.Context) {
 		},
 		BirthDate: sql.NullTime{
 			Time:  req.BirthDate,
-			Valid: !req.BirthDate.IsZero(),
+			Valid: true,
 		},
 	}
 

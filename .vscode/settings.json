@@ -6,6 +6,7 @@
 		"invld",
 		"mapstructure",
 		"mockdb",
+		"narg",
 		"Paseto",
 		"sqlc",
 		"stretchr",
