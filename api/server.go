@@ -1,8 +1,6 @@
 package api
 
 import (
-	"fmt"
-
 	db "github.com/asdsec/thenut/db/sqlc"
 	"github.com/asdsec/thenut/token"
 	"github.com/asdsec/thenut/utils"
@@ -19,12 +17,7 @@ type Server struct {
 }
 
 // NewServer creates a new HTTP server and routing
-func NewServer(config utils.Config, store db.Store) (*Server, error) {
-	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
-	if err != nil {
-		return nil, fmt.Errorf("cannot create token maker %w", err)
-	}
-
+func NewServer(config utils.Config, store db.Store, tokenMaker token.TokenMaker) (*Server, error) {
 	server := &Server{
 		config:     config,
 		store:      store,

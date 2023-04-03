@@ -30,5 +30,6 @@ server:
 
 mock:
 		mockgen -package mock_db -destination db/mock/store.go github.com/asdsec/thenut/db/sqlc Store
+		mockgen -package mock_token -destination token/mock/token_maker.go github.com/asdsec/thenut/token TokenMaker
 
 .PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mock

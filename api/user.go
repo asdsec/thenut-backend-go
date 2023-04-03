@@ -23,8 +23,8 @@ type authResponse struct {
 }
 
 type registerUserRequest struct {
-	Username    string    `json:"username" binding:"required,alphanum"`
-	Password    string    `json:"password" binding:"required,min=6"`
+	Username    string    `json:"username" binding:"required,alphanum,min=6"`
+	Password    string    `json:"password" binding:"required,min=6,max=72"`
 	Email       string    `json:"email" binding:"required,email"`
 	FullName    string    `json:"full_name" binding:"required"`
 	PhoneNumber string    `json:"phone_number" binding:"required,min=11"`

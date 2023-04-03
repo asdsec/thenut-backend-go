@@ -8,8 +8,8 @@ import (
 	reflect "reflect"
 	time "time"
 
-	gomock "github.com/golang/mock/gomock"
 	token "github.com/asdsec/thenut/token"
+	gomock "github.com/golang/mock/gomock"
 )
 
 // MockTokenMaker is a mock of TokenMaker interface.
@@ -36,12 +36,13 @@ func (m *MockTokenMaker) EXPECT() *MockTokenMakerMockRecorder {
 }
 
 // CreateToken mocks base method.
-func (m *MockTokenMaker) CreateToken(arg0 string, arg1 time.Duration) (string, error) {
+func (m *MockTokenMaker) CreateToken(arg0 string, arg1 time.Duration) (string, *token.TokenPayload, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateToken", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(*token.TokenPayload)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // CreateToken indicates an expected call of CreateToken.
