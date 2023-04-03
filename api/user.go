@@ -69,10 +69,33 @@ func (server *Server) registerUser(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, err := server.tokenMaker.CreateToken(
+	accessToken, _, err := server.tokenMaker.CreateToken(
 		user.Username,
 		server.config.AccessTokenDuration,
 	)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	refreshToken, refreshTokenPayload, err := server.tokenMaker.CreateToken(
+		user.Username,
+		server.config.RefreshTokenDuration,
+	)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	err = server.store.CreateSession(ctx, db.CreateSessionParams{
+		ID:           refreshTokenPayload.ID,
+		Username:     user.Username,
+		RefreshToken: refreshToken,
+		UserAgent:    ctx.Request.UserAgent(),
+		ClientIp:     ctx.ClientIP(),
+		IsBlocked:    false,
+		ExpiresAt:    refreshTokenPayload.ExpiredAt,
+	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -83,7 +106,7 @@ func (server *Server) registerUser(ctx *gin.Context) {
 		Email:        user.Email,
 		FullName:     user.FullName,
 		Username:     user.Username,
-		RefreshToken: "not_implemented",
+		RefreshToken: refreshToken,
 		ExpiresIn:    int(server.config.AccessTokenDuration.Seconds()),
 	}
 	ctx.JSON(http.StatusOK, rsp)
@@ -112,10 +135,33 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, err := server.tokenMaker.CreateToken(
+	accessToken, _, err := server.tokenMaker.CreateToken(
 		user.Username,
 		server.config.AccessTokenDuration,
 	)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	refreshToken, refreshTokenPayload, err := server.tokenMaker.CreateToken(
+		user.Username,
+		server.config.RefreshTokenDuration,
+	)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	err = server.store.CreateSession(ctx, db.CreateSessionParams{
+		ID:           refreshTokenPayload.ID,
+		Username:     user.Username,
+		RefreshToken: refreshToken,
+		UserAgent:    ctx.Request.UserAgent(),
+		ClientIp:     ctx.ClientIP(),
+		IsBlocked:    false,
+		ExpiresAt:    refreshTokenPayload.ExpiredAt,
+	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -126,7 +172,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		Email:        user.Email,
 		FullName:     user.FullName,
 		Username:     user.Username,
-		RefreshToken: "not_implemented",
+		RefreshToken: refreshToken,
 		ExpiresIn:    int(server.config.AccessTokenDuration.Seconds()),
 	}
 	ctx.JSON(http.StatusOK, rsp)

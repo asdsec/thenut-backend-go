@@ -22,6 +22,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// todo: implement register user api test
+// todo: implement login user api test
+
 func TestGetUserAPI(t *testing.T) {
 	tUser, _ := randomUser(t)
 
@@ -1159,4 +1162,20 @@ func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.User) {
 	require.Equal(t, user.ImageUrl, gotUser.ImageUrl)
 	require.Equal(t, user.PhoneNumber, gotUser.PhoneNumber)
 	require.Equal(t, user.Username, gotUser.Username)
+}
+
+func requireBodyMatchAuthResponse(t *testing.T, body *bytes.Buffer, expectedAuthResponse authResponse) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+	require.NotEmpty(t, data)
+
+	var gotAuthResponse authResponse
+	err = json.Unmarshal(data, &gotAuthResponse)
+	require.NoError(t, err)
+	require.Equal(t, expectedAuthResponse.AccessToken, gotAuthResponse.AccessToken)
+	require.Equal(t, expectedAuthResponse.Email, gotAuthResponse.Email)
+	require.Equal(t, expectedAuthResponse.ExpiresIn, gotAuthResponse.ExpiresIn)
+	require.Equal(t, expectedAuthResponse.FullName, gotAuthResponse.FullName)
+	require.Equal(t, expectedAuthResponse.RefreshToken, gotAuthResponse.RefreshToken)
+	require.Equal(t, expectedAuthResponse.Username, gotAuthResponse.Username)
 }

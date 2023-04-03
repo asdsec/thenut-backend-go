@@ -6,7 +6,7 @@ CREATE TABLE "users" (
   "phone_number" varchar UNIQUE NOT NULL,
   "image_url" varchar NOT NULL DEFAULT '/default/user/avatar.jpg',
   "gender" varchar(1) NOT NULL DEFAULT 'm',
-  "disabled" boolean NOT NULL DEFAULT (false),
+  "disabled" boolean NOT NULL DEFAULT false,
   "birth_date" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
   "password_changed_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
   "created_at" timestamptz NOT NULL DEFAULT (now())
@@ -55,6 +55,17 @@ CREATE TABLE "payments" (
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
+CREATE TABLE "sessions" (
+  "id" uuid PRIMARY KEY,
+  "username" varchar NOT NULL,
+  "refresh_token" varchar NOT NULL,
+  "user_agent" varchar NOT NULL,
+  "client_ip" varchar NOT NULL,
+  "is_blocked" boolean NOT NULL DEFAULT false,
+  "expires_at" timestamptz NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now())
+);
+
 -- CREATE UNIQUE INDEX ON "customers" ("owner");
 ALTER TABLE "customers" ADD CONSTRAINT "owner_key" UNIQUE ("owner");
 
@@ -96,5 +107,7 @@ ALTER TABLE "entries" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("i
 ALTER TABLE "payments" ADD FOREIGN KEY ("merchant_id") REFERENCES "merchants" ("id");
 
 ALTER TABLE "payments" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("id");
+
+ALTER TABLE "sessions" ADD FOREIGN KEY ("username") REFERENCES "users" ("username");
 
 -- ALTER TABLE "entries" ADD FOREIGN KEY ("created_at") REFERENCES "entries" ("id");
