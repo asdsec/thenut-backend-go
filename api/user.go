@@ -113,7 +113,7 @@ func (server *Server) registerUser(ctx *gin.Context) {
 }
 
 type loginUserRequest struct {
-	Username string `json:"username" binding:"required,alphanum"`
+	Username string `json:"username" binding:"required,alphanum,min=6,max=72"`
 	Password string `json:"password" binding:"required,min=6"`
 }
 

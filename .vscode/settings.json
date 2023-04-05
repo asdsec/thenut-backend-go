@@ -3,6 +3,7 @@
 		"alphanum",
 		"gomock",
 		"gonic",
+		"Hasher",
 		"invld",
 		"mapstructure",
 		"mockdb",
