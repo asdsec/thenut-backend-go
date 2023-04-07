@@ -16,6 +16,7 @@ var testConfig = utils.Config{
 	TokenSymmetricKey:    utils.RandomString(32),
 	AccessTokenDuration:  time.Minute,
 	RefreshTokenDuration: time.Hour,
+	ServerAddress:        "http://localhost:8080",
 }
 
 func newTestServer(t *testing.T, store db.Store, tokenMaker token.TokenMaker) *Server {

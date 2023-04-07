@@ -50,3 +50,7 @@ func authMiddleware(tokenMaker token.TokenMaker) gin.HandlerFunc {
 		ctx.Next()
 	}
 }
+
+func (*Server) getAuthPayload(ctx *gin.Context) *token.TokenPayload {
+	return ctx.MustGet(authorizationPayloadKey).(*token.TokenPayload)
+}
