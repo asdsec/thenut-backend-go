@@ -58,6 +58,12 @@ func (server *Server) setupRouter() {
 	authRoutes.PATCH("/accounts", server.updateCustomer)
 	authRoutes.DELETE("/accounts/:id", server.deleteCustomer)
 
+	authRoutes.GET("/accounts/merchants/", server.listMerchants)
+	authRoutes.GET("/accounts/merchants/:id", server.getMerchant)
+	authRoutes.POST("/accounts/merchants", server.createMerchant)
+	authRoutes.PATCH("/accounts/merchants", server.updateMerchant)
+	authRoutes.DELETE("/accounts/merchants/:id", server.deleteMerchant)
+
 	server.router = router
 }
 

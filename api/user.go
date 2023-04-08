@@ -7,7 +7,6 @@ import (
 	"time"
 
 	db "github.com/asdsec/thenut/db/sqlc"
-	"github.com/asdsec/thenut/token"
 	"github.com/asdsec/thenut/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
@@ -222,7 +221,7 @@ func (server *Server) getUser(ctx *gin.Context) {
 		return
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.TokenPayload)
+	authPayload := server.getAuthPayload(ctx)
 	if user.Username != authPayload.Username {
 		err := errors.New("account does not belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
@@ -244,7 +243,7 @@ func (server *Server) updateEmail(ctx *gin.Context) {
 		return
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.TokenPayload)
+	authPayload := server.getAuthPayload(ctx)
 	if req.Username != authPayload.Username {
 		err := errors.New("username does not belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
@@ -283,7 +282,7 @@ func (server *Server) updatePassword(ctx *gin.Context) {
 		return
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.TokenPayload)
+	authPayload := server.getAuthPayload(ctx)
 	if req.Username != authPayload.Username {
 		err := errors.New("username does not belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
@@ -343,7 +342,7 @@ func (server *Server) updateUser(ctx *gin.Context) {
 		return
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.TokenPayload)
+	authPayload := server.getAuthPayload(ctx)
 	if req.Username != authPayload.Username {
 		err := errors.New("username does not belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))

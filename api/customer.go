@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	db "github.com/asdsec/thenut/db/sqlc"
-	"github.com/asdsec/thenut/token"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 )
@@ -22,7 +21,7 @@ func (server *Server) createCustomer(ctx *gin.Context) {
 		return
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.TokenPayload)
+	authPayload := server.getAuthPayload(ctx)
 	if req.Owner != authPayload.Username {
 		err := errors.New("account does not belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
@@ -66,7 +65,7 @@ func (server *Server) getCustomer(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.TokenPayload)
+	authPayload := server.getAuthPayload(ctx)
 	if customer.Owner != authPayload.Username {
 		err := errors.New("account does not belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
@@ -99,7 +98,7 @@ func (server *Server) updateCustomer(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.TokenPayload)
+	authPayload := server.getAuthPayload(ctx)
 	if customer.Owner != authPayload.Username {
 		err := errors.New("account does not belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
@@ -145,7 +144,7 @@ func (server *Server) deleteCustomer(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.TokenPayload)
+	authPayload := server.getAuthPayload(ctx)
 	if customer.Owner != authPayload.Username {
 		err := errors.New("account does not belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
