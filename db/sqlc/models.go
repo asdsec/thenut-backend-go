@@ -5,10 +5,67 @@
 package db
 
 import (
+	"database/sql"
+	"database/sql/driver"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+type CommentType string
+
+const (
+	CommentTypePost     CommentType = "post"
+	CommentTypeMerchant CommentType = "merchant"
+)
+
+func (e *CommentType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = CommentType(s)
+	case string:
+		*e = CommentType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for CommentType: %T", src)
+	}
+	return nil
+}
+
+type NullCommentType struct {
+	CommentType CommentType
+	Valid       bool // Valid is true if CommentType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullCommentType) Scan(value interface{}) error {
+	if value == nil {
+		ns.CommentType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.CommentType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullCommentType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return ns.CommentType, nil
+}
+
+type Comment struct {
+	ID          int64       `json:"id"`
+	CommentType CommentType `json:"comment_type"`
+	// cannot be null if comment_type is post
+	PostID sql.NullInt64 `json:"post_id"`
+	// cannot be null if comment_type is merchant
+	MerchantID sql.NullInt64 `json:"merchant_id"`
+	Owner      string        `json:"owner"`
+	Comment    string        `json:"comment"`
+	CreatedAt  time.Time     `json:"created_at"`
+}
 
 type Consultancy struct {
 	ID         int64 `json:"id"`
@@ -26,15 +83,6 @@ type Customer struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type Entry struct {
-	ID         int64 `json:"id"`
-	CustomerID int64 `json:"customer_id"`
-	// might be positive or negative
-	Amount    int64     `json:"amount"`
-	Type      string    `json:"type"`
-	CreatedAt time.Time `json:"created_at"`
-}
-
 type Merchant struct {
 	ID         int64     `json:"id"`
 	Owner      string    `json:"owner"`
@@ -43,17 +91,19 @@ type Merchant struct {
 	Title      string    `json:"title"`
 	About      string    `json:"about"`
 	ImageUrl   string    `json:"image_url"`
-	Rating     int32     `json:"rating"`
+	Rating     float64   `json:"rating"`
 	CreatedAt  time.Time `json:"created_at"`
 }
 
-type Payment struct {
+type Post struct {
 	ID         int64 `json:"id"`
 	MerchantID int64 `json:"merchant_id"`
-	CustomerID int64 `json:"customer_id"`
-	// must be positive
-	Amount    int64     `json:"amount"`
-	CreatedAt time.Time `json:"created_at"`
+	// can be null only if image_url is not null
+	Title sql.NullString `json:"title"`
+	// can be null only if title is not null
+	ImageUrl  sql.NullString `json:"image_url"`
+	Likes     int32          `json:"likes"`
+	CreatedAt time.Time      `json:"created_at"`
 }
 
 type Session struct {

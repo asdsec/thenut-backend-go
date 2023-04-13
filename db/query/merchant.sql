@@ -1,12 +1,11 @@
 -- name: CreateMerchant :one
 INSERT INTO merchants (
   owner,
-  balance,
   profession,
   title,
   about
 ) VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4
 ) RETURNING *;
 
 -- name: GetMerchant :one

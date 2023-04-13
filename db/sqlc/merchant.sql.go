@@ -42,18 +42,16 @@ func (q *Queries) AddMerchantBalance(ctx context.Context, arg AddMerchantBalance
 const createMerchant = `-- name: CreateMerchant :one
 INSERT INTO merchants (
   owner,
-  balance,
   profession,
   title,
   about
 ) VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4
 ) RETURNING id, owner, balance, profession, title, about, image_url, rating, created_at
 `
 
 type CreateMerchantParams struct {
 	Owner      string `json:"owner"`
-	Balance    int64  `json:"balance"`
 	Profession string `json:"profession"`
 	Title      string `json:"title"`
 	About      string `json:"about"`
@@ -62,7 +60,6 @@ type CreateMerchantParams struct {
 func (q *Queries) CreateMerchant(ctx context.Context, arg CreateMerchantParams) (Merchant, error) {
 	row := q.db.QueryRowContext(ctx, createMerchant,
 		arg.Owner,
-		arg.Balance,
 		arg.Profession,
 		arg.Title,
 		arg.About,
@@ -174,13 +171,13 @@ RETURNING id, owner, balance, profession, title, about, image_url, rating, creat
 `
 
 type UpdateMerchantParams struct {
-	Balance    sql.NullInt64  `json:"balance"`
-	Profession sql.NullString `json:"profession"`
-	Title      sql.NullString `json:"title"`
-	About      sql.NullString `json:"about"`
-	ImageUrl   sql.NullString `json:"image_url"`
-	Rating     sql.NullInt32  `json:"rating"`
-	ID         int64          `json:"id"`
+	Balance    sql.NullInt64   `json:"balance"`
+	Profession sql.NullString  `json:"profession"`
+	Title      sql.NullString  `json:"title"`
+	About      sql.NullString  `json:"about"`
+	ImageUrl   sql.NullString  `json:"image_url"`
+	Rating     sql.NullFloat64 `json:"rating"`
+	ID         int64           `json:"id"`
 }
 
 func (q *Queries) UpdateMerchant(ctx context.Context, arg UpdateMerchantParams) (Merchant, error) {

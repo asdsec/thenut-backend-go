@@ -1,3 +1,8 @@
+CREATE TYPE "comment_type" AS ENUM (
+  'post',
+  'merchant'
+);
+
 CREATE TABLE "users" (
   "username" varchar PRIMARY KEY,
   "hashed_password" varchar NOT NULL,
@@ -13,45 +18,48 @@ CREATE TABLE "users" (
 );
 
 CREATE TABLE "customers" (
-  "id" bigserial PRIMARY KEY,
+  "id" BIGSERIAL PRIMARY KEY,
   "owner" varchar NOT NULL,
   "image_url" varchar NOT NULL DEFAULT '/default/user/avatar.jpg',
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "merchants" (
-  "id" bigserial PRIMARY KEY,
+  "id" BIGSERIAL PRIMARY KEY,
   "owner" varchar NOT NULL,
-  "balance" bigint NOT NULL,
+  "balance" bigint NOT NULL DEFAULT 0,
   "profession" varchar NOT NULL,
   "title" varchar NOT NULL,
   "about" varchar NOT NULL,
   "image_url" varchar NOT NULL DEFAULT '/default/merchant/avatar.jpg',
-  "rating" integer NOT NULL DEFAULT 0,
+  "rating" double PRECISION NOT NULL DEFAULT 0.0,
+  "created_at" timestamptz NOT NULL DEFAULT (now())
+);
+
+CREATE TABLE "posts" (
+  "id" BIGSERIAL PRIMARY KEY,
+  "merchant_id" bigint NOT NULL,
+  "title" varchar,
+  "image_url" varchar,
+  "likes" int NOT NULL DEFAULT 0,
+  "created_at" timestamptz NOT NULL DEFAULT (now())
+);
+
+CREATE TABLE "comments" (
+  "id" BIGSERIAL PRIMARY KEY,
+  "comment_type" comment_type NOT NULL,
+  "post_id" bigint,
+  "merchant_id" bigint,
+  "owner" varchar NOT NULL,
+  "comment" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "consultancies" (
-  "id" bigserial PRIMARY KEY,
+  "id" BIGSERIAL PRIMARY KEY,
   "merchant_id" bigint NOT NULL,
   "customer_id" bigint NOT NULL,
   "cost" bigint NOT NULL,
-  "created_at" timestamptz NOT NULL DEFAULT (now())
-);
-
-CREATE TABLE "entries" (
-  "id" bigserial PRIMARY KEY,
-  "customer_id" bigint NOT NULL,
-  "amount" bigint NOT NULL,
-  "type" varchar NOT NULL,
-  "created_at" timestamptz NOT NULL DEFAULT (now())
-);
-
-CREATE TABLE "payments" (
-  "id" bigserial PRIMARY KEY,
-  "merchant_id" bigint NOT NULL,
-  "customer_id" bigint NOT NULL,
-  "amount" bigint NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
@@ -66,13 +74,9 @@ CREATE TABLE "sessions" (
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
--- CREATE UNIQUE INDEX ON "customers" ("owner");
-ALTER TABLE "customers" ADD CONSTRAINT "owner_key" UNIQUE ("owner");
-
 CREATE INDEX ON "merchants" ("owner");
 
--- CREATE UNIQUE INDEX ON "merchants" ("owner", "profession");
-ALTER TABLE "merchants" ADD CONSTRAINT "owner_profession_key" UNIQUE ("owner", "profession");
+CREATE INDEX ON "posts" ("merchant_id");
 
 CREATE INDEX ON "consultancies" ("merchant_id");
 
@@ -80,19 +84,21 @@ CREATE INDEX ON "consultancies" ("customer_id");
 
 CREATE INDEX ON "consultancies" ("merchant_id", "customer_id");
 
-CREATE INDEX ON "entries" ("customer_id");
+COMMENT ON COLUMN "posts"."title" IS 'can be null only if image_url is not null';
 
-CREATE INDEX ON "payments" ("merchant_id");
+COMMENT ON COLUMN "posts"."image_url" IS 'can be null only if title is not null';
 
-CREATE INDEX ON "payments" ("customer_id");
+COMMENT ON COLUMN "comments"."post_id" IS 'cannot be null if comment_type is post';
 
-CREATE INDEX ON "payments" ("merchant_id", "customer_id");
+COMMENT ON COLUMN "comments"."merchant_id" IS 'cannot be null if comment_type is merchant';
 
 COMMENT ON COLUMN "consultancies"."cost" IS 'must be positive';
 
-COMMENT ON COLUMN "entries"."amount" IS 'might be positive or negative';
+ALTER TABLE "comments" ADD FOREIGN KEY ("post_id") REFERENCES "posts" ("id");
 
-COMMENT ON COLUMN "payments"."amount" IS 'must be positive';
+ALTER TABLE "comments" ADD FOREIGN KEY ("merchant_id") REFERENCES "merchants" ("id");
+
+ALTER TABLE "comments" ADD FOREIGN KEY ("owner") REFERENCES "users" ("username");
 
 ALTER TABLE "customers" ADD FOREIGN KEY ("owner") REFERENCES "users" ("username");
 
@@ -102,12 +108,6 @@ ALTER TABLE "consultancies" ADD FOREIGN KEY ("merchant_id") REFERENCES "merchant
 
 ALTER TABLE "consultancies" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("id");
 
-ALTER TABLE "entries" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("id");
-
-ALTER TABLE "payments" ADD FOREIGN KEY ("merchant_id") REFERENCES "merchants" ("id");
-
-ALTER TABLE "payments" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("id");
-
 ALTER TABLE "sessions" ADD FOREIGN KEY ("username") REFERENCES "users" ("username");
 
--- ALTER TABLE "entries" ADD FOREIGN KEY ("created_at") REFERENCES "entries" ("id");
+ALTER TABLE "posts" ADD FOREIGN KEY ("merchant_id") REFERENCES "merchants" ("id");

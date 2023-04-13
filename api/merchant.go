@@ -34,7 +34,6 @@ func (server *Server) createMerchant(ctx *gin.Context) {
 	arg := db.CreateMerchantParams{
 		Owner: req.Owner,
 		// todo: delete balance for creation of merchant
-		Balance:    0,
 		Profession: req.Profession,
 		Title:      req.Title,
 		About:      req.About,
@@ -211,9 +210,9 @@ func (server *Server) updateMerchant(ctx *gin.Context) {
 			Valid:  len(req.Title) > 0,
 		},
 		// fixme: rating valid
-		Rating: sql.NullInt32{
-			Int32: req.Rating,
-			Valid: req.Rating != 0,
+		Rating: sql.NullFloat64{
+			Float64: float64(req.Rating),
+			Valid:   req.Rating != 0,
 		},
 	}
 

@@ -12,27 +12,31 @@ import (
 
 type Querier interface {
 	AddMerchantBalance(ctx context.Context, arg AddMerchantBalanceParams) (Merchant, error)
+	CreateComment(ctx context.Context, arg CreateCommentParams) (Comment, error)
 	CreateConsultancy(ctx context.Context, arg CreateConsultancyParams) (Consultancy, error)
 	CreateCustomer(ctx context.Context, owner string) (Customer, error)
-	CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry, error)
 	CreateMerchant(ctx context.Context, arg CreateMerchantParams) (Merchant, error)
-	CreatePayment(ctx context.Context, arg CreatePaymentParams) (Payment, error)
+	CreatePost(ctx context.Context, arg CreatePostParams) (Post, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteComment(ctx context.Context, id int64) error
 	DeleteCustomer(ctx context.Context, id int64) error
 	DeleteMerchant(ctx context.Context, id int64) error
+	DeletePost(ctx context.Context, id int64) error
 	DeleteUser(ctx context.Context, username string) error
+	GetComment(ctx context.Context, id int64) (Comment, error)
 	GetConsultancy(ctx context.Context, id int64) (Consultancy, error)
 	GetCustomer(ctx context.Context, id int64) (Customer, error)
-	GetEntry(ctx context.Context, id int64) (Entry, error)
 	GetMerchant(ctx context.Context, id int64) (Merchant, error)
-	GetPayment(ctx context.Context, id int64) (Payment, error)
+	GetPost(ctx context.Context, id int64) (Post, error)
 	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 	GetUser(ctx context.Context, username string) (User, error)
 	ListConsultancies(ctx context.Context, arg ListConsultanciesParams) ([]Consultancy, error)
-	ListEntries(ctx context.Context, arg ListEntriesParams) ([]Entry, error)
+	ListMerchantComments(ctx context.Context, arg ListMerchantCommentsParams) ([]Comment, error)
+	ListMerchantPosts(ctx context.Context, arg ListMerchantPostsParams) ([]Post, error)
 	ListMerchants(ctx context.Context, arg ListMerchantsParams) ([]Merchant, error)
-	ListPayments(ctx context.Context, arg ListPaymentsParams) ([]Payment, error)
+	ListPostComments(ctx context.Context, arg ListPostCommentsParams) ([]Comment, error)
+	ListPosts(ctx context.Context, arg ListPostsParams) ([]Post, error)
 	UpdateCustomer(ctx context.Context, arg UpdateCustomerParams) (Customer, error)
 	UpdateEmail(ctx context.Context, arg UpdateEmailParams) (User, error)
 	UpdateMerchant(ctx context.Context, arg UpdateMerchantParams) (Merchant, error)

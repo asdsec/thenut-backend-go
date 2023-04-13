@@ -1,6 +1,6 @@
 -- name: CreateSession :exec
 INSERT INTO sessions (
-  id, 
+  id,
   username,
   refresh_token,
   user_agent,

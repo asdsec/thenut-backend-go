@@ -32,7 +32,7 @@ func TestUpdateMerchantAPI(t *testing.T) {
 		Title:      "updated_title",
 		About:      "updated_about",
 		ImageUrl:   "updated_image_url",
-		Rating:     int32(utils.RandomInt(1, 5)),
+		Rating:     float64(utils.RandomInt(1, 5)),
 		CreatedAt:  merchant.CreatedAt,
 	}
 
@@ -75,9 +75,9 @@ func TestUpdateMerchantAPI(t *testing.T) {
 						String: expected.Title,
 						Valid:  len(expected.Title) > 0,
 					},
-					Rating: sql.NullInt32{
-						Int32: expected.Rating,
-						Valid: expected.Rating != 0,
+					Rating: sql.NullFloat64{
+						Float64: expected.Rating,
+						Valid:   expected.Rating != 0,
 					},
 				}
 
@@ -470,7 +470,7 @@ func TestListMerchantsAPI(t *testing.T) {
 			server := newTestServer(t, store, tokenMaker)
 			recorder := httptest.NewRecorder()
 
-			url := "/accounts/merchants/"
+			url := "/accounts/merchants"
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -842,7 +842,6 @@ func TestCreateMerchantAPI(t *testing.T) {
 			buildStubs: func(store *mock_db.MockStore) {
 				arg := db.CreateMerchantParams{
 					Owner:      merchant.Owner,
-					Balance:    0,
 					Profession: merchant.Profession,
 					Title:      merchant.Title,
 					About:      merchant.About,
@@ -932,7 +931,6 @@ func TestCreateMerchantAPI(t *testing.T) {
 			buildStubs: func(store *mock_db.MockStore) {
 				arg := db.CreateMerchantParams{
 					Owner:      merchant.Owner,
-					Balance:    0,
 					Profession: merchant.Profession,
 					Title:      merchant.Title,
 					About:      merchant.About,
@@ -961,7 +959,6 @@ func TestCreateMerchantAPI(t *testing.T) {
 			buildStubs: func(store *mock_db.MockStore) {
 				arg := db.CreateMerchantParams{
 					Owner:      merchant.Owner,
-					Balance:    0,
 					Profession: merchant.Profession,
 					Title:      merchant.Title,
 					About:      merchant.About,
@@ -990,7 +987,6 @@ func TestCreateMerchantAPI(t *testing.T) {
 			buildStubs: func(store *mock_db.MockStore) {
 				arg := db.CreateMerchantParams{
 					Owner:      merchant.Owner,
-					Balance:    0,
 					Profession: merchant.Profession,
 					Title:      merchant.Title,
 					About:      merchant.About,
@@ -1044,7 +1040,7 @@ func randomMerchant(owner string) db.Merchant {
 		Title:      utils.RandomString(6),
 		About:      utils.RandomString(16),
 		ImageUrl:   utils.RandomImageUrl(),
-		Rating:     int32(utils.RandomInt(1, 5)),
+		Rating:     float64(utils.RandomInt(1, 5)),
 	}
 }
 
