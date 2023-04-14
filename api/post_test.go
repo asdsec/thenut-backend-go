@@ -20,6 +20,203 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestCreatePostAPI(t *testing.T) {
+	user, _ := randomUser(t)
+	merchant := randomMerchant(user.Username)
+	post := randomPost(merchant.ID)
+	expected := newPostResponse(post)
+
+	testCases := []struct {
+		name          string
+		body          gin.H
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker)
+		buildStubs    func(store *mock_db.MockStore)
+		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "Ok",
+			body: gin.H{
+				"merchant_id": merchant.ID,
+				"title":       post.Title.String,
+				"image_url":   post.ImageUrl.String,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
+			buildStubs: func(store *mock_db.MockStore) {
+				store.EXPECT().
+					GetMerchant(gomock.Any(), gomock.Eq(merchant.ID)).
+					Times(1).
+					Return(merchant, nil)
+
+				arg := db.CreatePostParams{
+					MerchantID: post.MerchantID,
+					Title:      post.Title,
+					ImageUrl:   post.ImageUrl,
+				}
+
+				store.EXPECT().
+					CreatePost(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(post, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				requireBodyMatchPostResponse(t, recorder.Body, expected)
+			},
+		},
+		{
+			name: "InvalidMerchantID",
+			body: gin.H{
+				"merchant_id": -1, // invalid merchant id
+				"title":       post.Title.String,
+				"image_url":   post.ImageUrl.String,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
+			buildStubs: func(store *mock_db.MockStore) {
+				store.EXPECT().
+					GetMerchant(gomock.Any(), gomock.Any()).
+					Times(0)
+
+				store.EXPECT().
+					CreatePost(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "NullTittleAndImageUrl",
+			body: gin.H{
+				"merchant_id": merchant.ID,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
+			buildStubs: func(store *mock_db.MockStore) {
+				store.EXPECT().
+					GetMerchant(gomock.Any(), gomock.Any()).
+					Times(0)
+
+				store.EXPECT().
+					CreatePost(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "UnauthorizedUser",
+			body: gin.H{
+				"merchant_id": merchant.ID,
+				"title":       post.Title.String,
+				"image_url":   post.ImageUrl.String,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, "invalid_username", time.Minute)
+			},
+			buildStubs: func(store *mock_db.MockStore) {
+				store.EXPECT().
+					GetMerchant(gomock.Any(), gomock.Eq(merchant.ID)).
+					Times(1).
+					Return(merchant, nil)
+
+				store.EXPECT().
+					CreatePost(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name: "NoAuthorization",
+			body: gin.H{
+				"merchant_id": merchant.ID,
+				"title":       post.Title.String,
+				"image_url":   post.ImageUrl.String,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker) {
+				// No authorization
+			},
+			buildStubs: func(store *mock_db.MockStore) {
+				store.EXPECT().
+					GetMerchant(gomock.Any(), gomock.Any()).
+					Times(0)
+
+				store.EXPECT().
+					CreatePost(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name: "InternalServerError",
+			body: gin.H{
+				"merchant_id": merchant.ID,
+				"title":       post.Title.String,
+				"image_url":   post.ImageUrl.String,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.TokenMaker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
+			buildStubs: func(store *mock_db.MockStore) {
+				store.EXPECT().
+					GetMerchant(gomock.Any(), gomock.Eq(merchant.ID)).
+					Times(1).
+					Return(merchant, nil)
+
+				arg := db.CreatePostParams{
+					MerchantID: post.MerchantID,
+					Title:      post.Title,
+					ImageUrl:   post.ImageUrl,
+				}
+
+				store.EXPECT().
+					CreatePost(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(db.Post{}, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mock_db.NewMockStore(ctrl)
+			tc.buildStubs(store)
+
+			tokenMaker := newTestTokenMaker(t)
+			server := newTestServer(t, store, tokenMaker)
+			recorder := httptest.NewRecorder()
+
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := "/posts"
+			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, server.tokenMaker)
+			server.router.ServeHTTP(recorder, request)
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
 func TestDeletePostAPI(t *testing.T) {
 	user, _ := randomUser(t)
 	merchant := randomMerchant(user.Username)
@@ -312,8 +509,10 @@ func TestListMerchantPostsAPI(t *testing.T) {
 
 	n := 5
 	posts := make([]db.Post, n)
+	expected := make([]postResponse, n)
 	for i := 0; i < n; i++ {
 		posts[i] = randomPost(merchant.ID)
+		expected[i] = newPostResponse(posts[i])
 	}
 
 	type Query struct {
@@ -355,7 +554,7 @@ func TestListMerchantPostsAPI(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchPosts(t, recorder.Body, posts)
+				requireBodyMatchPostsResponse(t, recorder.Body, expected)
 			},
 		},
 		{
@@ -537,22 +736,22 @@ func randomPost(merchantID int64) db.Post {
 	}
 }
 
-func requireBodyMatchPosts(t *testing.T, body *bytes.Buffer, posts []db.Post) {
+func requireBodyMatchPostsResponse(t *testing.T, body *bytes.Buffer, expected []postResponse) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotPosts []db.Post
-	err = json.Unmarshal(data, &gotPosts)
+	var actual []postResponse
+	err = json.Unmarshal(data, &actual)
 	require.NoError(t, err)
-	require.Equal(t, posts, gotPosts)
+	require.Equal(t, expected, actual)
 }
 
-func requireBodyMatchPost(t *testing.T, body *bytes.Buffer, post db.Post) {
+func requireBodyMatchPostResponse(t *testing.T, body *bytes.Buffer, expected postResponse) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotPost db.Post
-	err = json.Unmarshal(data, &gotPost)
+	var actual postResponse
+	err = json.Unmarshal(data, &actual)
 	require.NoError(t, err)
-	require.Equal(t, post, gotPost)
+	require.Equal(t, expected, actual)
 }
