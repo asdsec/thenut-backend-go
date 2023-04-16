@@ -29,6 +29,38 @@ func newCommentResponse(c db.Comment) commentResponse {
 	}
 }
 
+type createCommentRequest struct {
+	PostID  int64  `json:"post_id" binding:"required,min=1"`
+	Comment string `json:"comment" binding:"required"`
+}
+
+func (server *Server) createPostComment(ctx *gin.Context) {
+	var req createCommentRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	authPayload := server.getAuthPayload(ctx)
+	arg := db.CreateCommentParams{
+		CommentType: db.CommentTypePost,
+		Owner:       authPayload.Username,
+		Comment:     req.Comment,
+		PostID: sql.NullInt64{
+			Int64: req.PostID,
+			Valid: true,
+		},
+	}
+
+	comment, err := server.store.CreateComment(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, newCommentResponse(comment))
+}
+
 type listPostCommentsRequestUri struct {
 	PageID   int32 `form:"page_id" binding:"required,min=1"`
 	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
