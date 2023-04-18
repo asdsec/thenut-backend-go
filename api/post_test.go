@@ -704,7 +704,7 @@ func TestListMerchantPostsAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/posts"
+			url := "/merchants/posts"
 			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
 			require.NoError(t, err)
 

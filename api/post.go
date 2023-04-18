@@ -135,7 +135,7 @@ func (server *Server) deletePost(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, nil)
 }
 
-type listMerchantPostsRequestQuery struct {
+type listPostsRequestQuery struct {
 	PageID   int32 `form:"page_id" binding:"required,min=1"`
 	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
 }
@@ -146,7 +146,7 @@ type listMerchantPostsRequest struct {
 
 func (server *Server) listMerchantPosts(ctx *gin.Context) {
 	var req listMerchantPostsRequest
-	var query listMerchantPostsRequestQuery
+	var query listPostsRequestQuery
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -163,6 +163,37 @@ func (server *Server) listMerchantPosts(ctx *gin.Context) {
 	}
 
 	posts, err := server.store.ListMerchantPosts(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	rsp := make([]postResponse, len(posts))
+	for i := range posts {
+		rsp[i] = newPostResponse(posts[i])
+	}
+
+	ctx.JSON(http.StatusOK, rsp)
+}
+
+func (server *Server) listPosts(ctx *gin.Context) {
+	var query listPostsRequestQuery
+	if err := ctx.ShouldBindQuery(&query); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.ListPostsParams{
+		Limit:  query.PageSize,
+		Offset: (query.PageID - 1) * query.PageSize,
+	}
+
+	posts, err := server.store.ListPosts(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
