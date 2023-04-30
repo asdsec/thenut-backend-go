@@ -5,3 +5,4 @@ DROP TABLE IF EXISTS "posts";
 DROP TABLE IF EXISTS "comments";
 DROP TABLE IF EXISTS "consultancies";
 DROP TABLE IF EXISTS "sessions";
+DROP TABLE IF EXISTS "app_versions";

@@ -74,6 +74,13 @@ CREATE TABLE "sessions" (
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
+CREATE TABLE app_versions (
+  "id" BIGSERIAL PRIMARY KEY,
+  "tag" varchar NOT NULL,
+  "version" varchar NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now())
+);
+
 CREATE INDEX ON "merchants" ("owner");
 
 CREATE INDEX ON "posts" ("merchant_id");

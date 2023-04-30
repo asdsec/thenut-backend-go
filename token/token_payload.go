@@ -13,8 +13,6 @@ var (
 	ErrInvalidToken = errors.New("token: token is invalid")
 )
 
-const At = 12
-
 // TokenPayload contains the payload data of the token
 type TokenPayload struct {
 	ID        uuid.UUID `json:"id"`

@@ -43,6 +43,7 @@ func (server *Server) setupRouter() {
 	router.POST("/auth/register", server.registerUser)
 	router.POST("/auth/login", server.loginUser)
 	router.POST("/tokens/renew", server.renewAccessToken)
+	router.GET("/versions", server.getVersion)
 
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
@@ -70,6 +71,9 @@ func (server *Server) setupRouter() {
 	authRoutes.DELETE("/posts/:id", server.deletePost)
 	authRoutes.GET("/posts/comments", server.listPostComments)
 	authRoutes.POST("/posts/comments", server.createPostComment)
+
+	// fixme: update versions after admin
+	router.POST("/versions", server.createAppVersion)
 
 	server.router = router
 }

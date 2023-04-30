@@ -55,6 +55,13 @@ func (ns NullCommentType) Value() (driver.Value, error) {
 	return ns.CommentType, nil
 }
 
+type AppVersion struct {
+	ID        int64     `json:"id"`
+	Tag       string    `json:"tag"`
+	Version   string    `json:"version"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type Comment struct {
 	ID          int64       `json:"id"`
 	CommentType CommentType `json:"comment_type"`

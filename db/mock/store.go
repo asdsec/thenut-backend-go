@@ -51,6 +51,21 @@ func (mr *MockStoreMockRecorder) AddMerchantBalance(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddMerchantBalance", reflect.TypeOf((*MockStore)(nil).AddMerchantBalance), arg0, arg1)
 }
 
+// CreateAppVersion mocks base method.
+func (m *MockStore) CreateAppVersion(arg0 context.Context, arg1 db.CreateAppVersionParams) (db.AppVersion, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAppVersion", arg0, arg1)
+	ret0, _ := ret[0].(db.AppVersion)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateAppVersion indicates an expected call of CreateAppVersion.
+func (mr *MockStoreMockRecorder) CreateAppVersion(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAppVersion", reflect.TypeOf((*MockStore)(nil).CreateAppVersion), arg0, arg1)
+}
+
 // CreateComment mocks base method.
 func (m *MockStore) CreateComment(arg0 context.Context, arg1 db.CreateCommentParams) (db.Comment, error) {
 	m.ctrl.T.Helper()
@@ -225,6 +240,21 @@ func (mr *MockStoreMockRecorder) DeleteUser(arg0, arg1 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockStore)(nil).DeleteUser), arg0, arg1)
 }
 
+// GetAppVersion mocks base method.
+func (m *MockStore) GetAppVersion(arg0 context.Context, arg1 string) (db.AppVersion, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAppVersion", arg0, arg1)
+	ret0, _ := ret[0].(db.AppVersion)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAppVersion indicates an expected call of GetAppVersion.
+func (mr *MockStoreMockRecorder) GetAppVersion(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAppVersion", reflect.TypeOf((*MockStore)(nil).GetAppVersion), arg0, arg1)
+}
+
 // GetComment mocks base method.
 func (m *MockStore) GetComment(arg0 context.Context, arg1 int64) (db.Comment, error) {
 	m.ctrl.T.Helper()
@@ -330,6 +360,21 @@ func (mr *MockStoreMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockStore)(nil).GetUser), arg0, arg1)
 }
 
+// ListAppVersions mocks base method.
+func (m *MockStore) ListAppVersions(arg0 context.Context) ([]db.AppVersion, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAppVersions", arg0)
+	ret0, _ := ret[0].([]db.AppVersion)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAppVersions indicates an expected call of ListAppVersions.
+func (mr *MockStoreMockRecorder) ListAppVersions(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAppVersions", reflect.TypeOf((*MockStore)(nil).ListAppVersions), arg0)
+}
+
 // ListConsultancies mocks base method.
 func (m *MockStore) ListConsultancies(arg0 context.Context, arg1 db.ListConsultanciesParams) ([]db.Consultancy, error) {
 	m.ctrl.T.Helper()
@@ -418,6 +463,21 @@ func (m *MockStore) ListPosts(arg0 context.Context, arg1 db.ListPostsParams) ([]
 func (mr *MockStoreMockRecorder) ListPosts(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPosts", reflect.TypeOf((*MockStore)(nil).ListPosts), arg0, arg1)
+}
+
+// UpdateAppVersion mocks base method.
+func (m *MockStore) UpdateAppVersion(arg0 context.Context, arg1 db.UpdateAppVersionParams) (db.AppVersion, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAppVersion", arg0, arg1)
+	ret0, _ := ret[0].(db.AppVersion)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateAppVersion indicates an expected call of UpdateAppVersion.
+func (mr *MockStoreMockRecorder) UpdateAppVersion(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAppVersion", reflect.TypeOf((*MockStore)(nil).UpdateAppVersion), arg0, arg1)
 }
 
 // UpdateCustomer mocks base method.
