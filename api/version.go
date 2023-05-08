@@ -58,10 +58,6 @@ func (server *Server) createAppVersion(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, vrs)
 }
 
-type versionResponse struct {
-	Version string `json:"version"`
-}
-
 func (server *Server) getVersion(ctx *gin.Context) {
 	vrs, err := server.store.GetAppVersion(ctx, latest)
 	if err != nil {
@@ -72,5 +68,5 @@ func (server *Server) getVersion(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	ctx.JSON(http.StatusOK, versionResponse{Version: vrs.Version})
+	ctx.JSON(http.StatusOK, vrs.Version)
 }
